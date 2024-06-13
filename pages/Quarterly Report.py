@@ -2,6 +2,15 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+
+# Set the page configuration
+# st.set_page_config(
+#     page_title="Quarterly Report",
+#     page_icon="🧊",
+#     layout="wide",
+#     initial_sidebar_state="collapsed",
+# )
+
 def prepare_data(df):
     # Ensure the insole-to-shoe ratio is calculated and handle infinite values
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
