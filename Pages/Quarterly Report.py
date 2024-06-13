@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
 def prepare_data(df):
     # Ensure the insole-to-shoe ratio is calculated and handle infinite values
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
@@ -72,7 +71,7 @@ def create_table(staff_data):
 
 
 # Streamlit title
-st.title("Q2 Individual Staff CCI Report")
+st.title("Q2 Individual Staff CCI Data")
 
 # File uploader for CSV file
 uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
