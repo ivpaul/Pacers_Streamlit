@@ -4,7 +4,7 @@ import streamlit as st
 # Set the page configuration
 st.set_page_config(
     page_title="Inventory",
-    page_icon="😄",
+    page_icon=":smile:",
 
     layout="wide",
     initial_sidebar_state="collapsed",

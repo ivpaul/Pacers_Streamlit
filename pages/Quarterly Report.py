@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 # Set the page configuration
 st.set_page_config(
     page_title="Quarterly Report",
-    page_icon="😄",
+    page_icon=":smile:",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
