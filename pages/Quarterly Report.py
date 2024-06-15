@@ -77,7 +77,7 @@ def create_table(staff_data):
     table_data.set_index('Week', inplace=True)
 
     st.table(table_data)
-
+        
 
 # Streamlit title
 st.title("Q2 Individual Staff CCI Data")
@@ -90,12 +90,16 @@ if uploaded_file is not None:
 
     data = pd.read_csv(uploaded_file)
 
-    sales_data = data[['day', 'staff_name', 'name_of_staff_who_helped_with_sale', 'product_type', 'net_quantity',
-                           'pos_location_name']]
-    sales_data_clean = sales_data.dropna(subset=['pos_location_name'])
+    data = data.drop_duplicates()
+    data = data.dropna(subset=['pos_location_name'])
+    data['staff_name'] = data['staff_name'].fillna(data['pos_location_name'])
+    data['name_of_staff_who_helped_with_sale'] = data['name_of_staff_who_helped_with_sale'].fillna(data['staff_name'])
+    data = data.dropna(subset=['product_type'])
+    data = data.dropna(subset=['variant_title'])
+
 
     filtered_product_types = ["Men's Shoes", "Women's Shoes", "Unisex Shoes", "Footbeds", "Socks"]
-    cci_sales = sales_data_clean[sales_data_clean['product_type'].isin(filtered_product_types)]
+    cci_sales = data[data['product_type'].isin(filtered_product_types)]
 
     # Convert the day column to datetime format
     cci_sales['day'] = pd.to_datetime(cci_sales['day'])
@@ -107,18 +111,31 @@ if uploaded_file is not None:
     socks_df = cci_sales[cci_sales['product_type'] == "Socks"]
     insoles_df = cci_sales[cci_sales['product_type'] == "Footbeds"]
 
+    # # Group by week and staff, then sum net_quantity for shoes and socks
+    # shoes_agg = shoes_df.groupby(['week', 'name_of_staff_who_helped_with_sale', 'pos_location_name'])[
+    #     'net_quantity'].sum().reset_index()
+    # socks_agg = socks_df.groupby(['week', 'name_of_staff_who_helped_with_sale', 'pos_location_name'])[
+    #     'net_quantity'].sum().reset_index()
+    # insoles_agg = insoles_df.groupby(['week', 'name_of_staff_who_helped_with_sale', 'pos_location_name'])[
+    #     'net_quantity'].sum().reset_index()
+    #
+    # merged_agg = pd.merge(shoes_agg, socks_agg, on=['week', 'name_of_staff_who_helped_with_sale', 'pos_location_name'],
+    #                       how='left', suffixes=('_shoes', '_socks'))
+    # merged_agg = pd.merge(merged_agg, insoles_agg,
+    #                       on=['week', 'name_of_staff_who_helped_with_sale', 'pos_location_name'], how='left')
+
     # Group by week and staff, then sum net_quantity for shoes and socks
-    shoes_agg = shoes_df.groupby(['week', 'name_of_staff_who_helped_with_sale', 'pos_location_name'])[
+    shoes_agg = shoes_df.groupby(['week', 'pos_location_name', 'name_of_staff_who_helped_with_sale'])[
         'net_quantity'].sum().reset_index()
-    socks_agg = socks_df.groupby(['week', 'name_of_staff_who_helped_with_sale', 'pos_location_name'])[
+    socks_agg = socks_df.groupby(['week', 'pos_location_name', 'name_of_staff_who_helped_with_sale'])[
         'net_quantity'].sum().reset_index()
-    insoles_agg = insoles_df.groupby(['week', 'name_of_staff_who_helped_with_sale', 'pos_location_name'])[
+    insoles_agg = insoles_df.groupby(['week', 'pos_location_name', 'name_of_staff_who_helped_with_sale'])[
         'net_quantity'].sum().reset_index()
 
-    merged_agg = pd.merge(shoes_agg, socks_agg, on=['week', 'name_of_staff_who_helped_with_sale', 'pos_location_name'],
+    merged_agg = pd.merge(shoes_agg, socks_agg, on=['week', 'pos_location_name', 'name_of_staff_who_helped_with_sale'],
                           how='left', suffixes=('_shoes', '_socks'))
     merged_agg = pd.merge(merged_agg, insoles_agg,
-                          on=['week', 'name_of_staff_who_helped_with_sale', 'pos_location_name'], how='left')
+                          on=['week', 'pos_location_name', 'name_of_staff_who_helped_with_sale'], how='left')
 
     # Rename the columns for clarity
     merged_agg.rename(columns={'net_quantity': 'net_quantity_insoles'}, inplace=True)
