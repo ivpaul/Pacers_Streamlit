@@ -8,6 +8,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+
+
 # URL to be displayed
 url = "https://www.runpacers.com"
 
