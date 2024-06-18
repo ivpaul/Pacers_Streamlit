@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import datetime
 
 # Constants
 DESIRED_LOCATIONS = ['Pacers 14th St', 'Pacers Georgetown', 'Pacers Alexandria', 'Pacers Navy Yard', 'Pacers Arlington']
@@ -15,6 +16,12 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+def log_access(message):
+    """Log access to the application."""
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open("access_log.txt", "a") as f:
+        f.write(f"{message} at: {current_time}\n")
 
 def clean_data(data):
     """Clean the input data by removing duplicates and handling missing values."""
@@ -146,6 +153,10 @@ st.header("Q2 Individual Staff CCI Data")
 # File uploader for CSV file
 uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
 if uploaded_file is not None:
+
+    # Log the file upload event
+    log_access(f"Quarterly report uploaded: {uploaded_file.name}")
+
     data = pd.read_csv(uploaded_file)
 
     # Call the clean_data function

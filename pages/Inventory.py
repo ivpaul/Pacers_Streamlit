@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+import datetime
 
 # Set the page configuration
 st.set_page_config(
@@ -9,6 +10,12 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+def log_access(message):
+    """Log access to the application."""
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open("access_log.txt", "a") as f:
+        f.write(f"{message} at: {current_time}\n")
 
 # Initialize 'Required Stock' with different minimums
 def get_required_stock(row):
@@ -26,6 +33,10 @@ st.title("Inventory")
 uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
 
 if uploaded_file is not None:
+
+    # Log the file upload event
+    log_access(f"Inventory report uploaded: {uploaded_file.name}")
+
     all_inventory_df= pd.read_csv(uploaded_file, low_memory=False)
     pd.set_option('display.max_columns', None)
     columns_of_interest = [
