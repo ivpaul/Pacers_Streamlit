@@ -2,13 +2,14 @@ import streamlit as st
 import datetime
 import os
 
-# Set the page configuration
+# Set the page configuration at the very top
 st.set_page_config(
     page_title="Main",
     page_icon=":smile:",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
 
 # Function to log each access
 def log_access():
@@ -19,9 +20,9 @@ def log_access():
     try:
         with open(log_file_path, "a") as f:
             f.write(log_message)
-        # st.write("Logged access successfully.")
+        print("Logged access successfully.")
     except Exception as e:
-        st.error(f"Failed to log access: {e}")
+        print(f"Failed to log access: {e}")
 
 
 # Log access every time the app is accessed or used
