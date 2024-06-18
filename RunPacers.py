@@ -1,11 +1,20 @@
 import streamlit as st
 import datetime
+import os
 
 # Function to log each access
 def log_access():
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open("access_log.txt", "a") as f:
-        f.write(f"App accessed at: {current_time}\n")
+    log_message = f"App accessed at: {current_time}\n"
+    log_file_path = "access_log.txt"
+
+    try:
+        with open(log_file_path, "a") as f:
+            f.write(log_message)
+        st.write("Logged access successfully.")
+    except Exception as e:
+        st.error(f"Failed to log access: {e}")
+
 
 # Log access every time the app is accessed or used
 log_access()
