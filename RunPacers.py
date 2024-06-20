@@ -1,38 +1,16 @@
-import logging
 import streamlit as st
-import datetime
+from utils.log import get_logger
 
-# Initialize logging
-def init_logging():
-    logger = logging.getLogger("streamlit_app")
-    if not logger.hasHandlers():
-        logger.setLevel(logging.INFO)
-        handler = logging.FileHandler("log.txt")
-        handler.setLevel(logging.INFO)
-        formatter = logging.Formatter("%(asctime)s %(message)s")
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+logger = get_logger()
 
-def log_access():
-    logger = logging.getLogger("streamlit_app")
-    logger.info("App accessed")
+logger.info("App accessed")
 
-# Main function to run the Streamlit app
-def main():
-    logger = logging.getLogger("streamlit_app")
-    logger.info("Inside main")
+text = st.sidebar.text_input("Text:")
+logger.info(f"User entered text: {text}")
 
-    st.title("Main Page")
+# URL to be displayed
+url = "https://www.runpacers.com"
 
-    text = st.sidebar.text_input("Text:")
-    logger.info(f"User entered text: {text}")
+# Display the URL as a clickable link
+st.markdown(f"### [Visit Pacers Website]({url})")
 
-    # URL to be displayed
-    url = "https://www.runpacers.com"
-
-    # Display the URL as a clickable link
-    st.markdown(f"### [Visit Pacers Website]({url})")
-
-init_logging()
-log_access()
-main()
