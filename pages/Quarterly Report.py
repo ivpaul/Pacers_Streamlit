@@ -148,7 +148,7 @@ def create_donut_chart(total, values, labels, title, is_percentage=False):
     return fig
 
 # Streamlit title
-st.header("Q2 Individual Staff CCI Data")
+st.header("CCI Dashboard")
 
 # File uploader for CSV file
 uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
