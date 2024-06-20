@@ -2,7 +2,6 @@ import logging
 import streamlit as st
 import datetime
 
-
 # Initialize logging
 def init_logging():
     logger = logging.getLogger("streamlit_app")
@@ -14,11 +13,9 @@ def init_logging():
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
-
 def log_access():
     logger = logging.getLogger("streamlit_app")
     logger.info("App accessed")
-
 
 # Main function to run the Streamlit app
 def main():
@@ -36,8 +33,6 @@ def main():
     # Display the URL as a clickable link
     st.markdown(f"### [Visit Pacers Website]({url})")
 
-
-if __name__ == "__main__":
-    init_logging()
-    log_access()
-    main()
+init_logging()
+log_access()
+main()
