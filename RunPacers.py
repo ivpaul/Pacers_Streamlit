@@ -1,16 +1,24 @@
 import streamlit as st
-from utils.log import get_logger
+import logging
+from datetime import datetime
 
-logger = get_logger()
+# Configure logging
+logging.basicConfig(
+    filename='app.log',
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s:%(message)s'
+)
 
-logger.info("App accessed")
+# Function to log access
+def log_access():
+    logging.info('App accessed')
 
-text = st.sidebar.text_input("Text:")
-logger.info(f"User entered text: {text}")
+# Call log_access when the app is loaded
+log_access()
 
-# URL to be displayed
-url = "https://www.runpacers.com"
+# Your Streamlit app code
+st.title('My Streamlit App')
+st.write('This is a sample app with logging.')
 
-# Display the URL as a clickable link
-st.markdown(f"### [Visit Pacers Website]({url})")
-
+# Add more logging if necessary
+logging.info('Main page displayed')
