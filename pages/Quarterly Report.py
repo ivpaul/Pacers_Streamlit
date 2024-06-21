@@ -132,7 +132,7 @@ def create_donut_chart(total, values, labels, title, is_percentage=False):
     fig, ax = plt.subplots()
 
     percent_values = values * 100
-    wedges, texts, autotexts = ax.pie(values, labels=labels, autopct=lambda p: f'{p * sum(values) / 100:.1f}%', startangle=90, wedgeprops=dict(width=0.3, edgecolor='w'))
+    wedges, texts, autotexts = ax.pie(values, labels=labels, autopct=lambda p: f'{p * sum(values) / 100:.1f}%', startangle=90, wedgeprops=dict(width=0.2, edgecolor='w'))
 
     for i, a in enumerate(autotexts):
         a.set_text(f'{values[i] * 100:.1f}%')
@@ -141,7 +141,7 @@ def create_donut_chart(total, values, labels, title, is_percentage=False):
     fig.gca().add_artist(center_circle)
 
     center_text = f"{total * 100:.2f}%" if is_percentage else str(total)
-    plt.text(0, 0, center_text, ha='center', va='center', fontsize=20, color='black')
+    plt.text(0, 0, center_text, ha='center', va='center', fontsize=30, color='black')
 
     ax.axis('equal')
     plt.title(title)
