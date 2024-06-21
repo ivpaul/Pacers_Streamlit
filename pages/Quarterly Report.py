@@ -17,6 +17,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+
 def log_access(message):
     """Log access to the application."""
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -46,8 +47,10 @@ def aggregate_data_by_columns(data, group_columns, agg_column):
 
 def merge_aggregated_data(shoes_agg, socks_agg, insoles_agg):
     """Merge aggregated data for shoes, socks, and insoles."""
-    merged_agg = pd.merge(shoes_agg, socks_agg, on=['week', 'pos_location_name', 'name_of_staff_who_helped_with_sale'], how='left', suffixes=('_shoes', '_socks'))
-    merged_agg = pd.merge(merged_agg, insoles_agg, on=['week', 'pos_location_name', 'name_of_staff_who_helped_with_sale'], how='left')
+    merged_agg = pd.merge(shoes_agg, socks_agg, on=['week', 'pos_location_name', 'name_of_staff_who_helped_with_sale'],
+                          how='left', suffixes=('_shoes', '_socks'))
+    merged_agg = pd.merge(merged_agg, insoles_agg,
+                          on=['week', 'pos_location_name', 'name_of_staff_who_helped_with_sale'], how='left')
     return merged_agg
 
 def prepare_data(df):
@@ -59,7 +62,8 @@ def prepare_data(df):
 
 def add_date_ranges(df):
     """Add date ranges to the DataFrame."""
-    df['date_range'] = df['week'].apply(lambda x: f"{(START_DATE + pd.Timedelta(days=(x-1)*7)).strftime('%Y-%m-%d')} to {(START_DATE + pd.Timedelta(days=x*7 - 1)).strftime('%Y-%m-%d')}")
+    df['date_range'] = df['week'].apply(lambda
+                                            x: f"{(START_DATE + pd.Timedelta(days=(x - 1) * 7)).strftime('%Y-%m-%d')} to {(START_DATE + pd.Timedelta(days=x * 7 - 1)).strftime('%Y-%m-%d')}")
     return df
 
 def create_bar_chart(staff_data):
@@ -68,8 +72,10 @@ def create_bar_chart(staff_data):
     bar_width = 0.35
     spacing = 0.15
 
-    bars_sock = ax.bar(staff_data['week'] - (bar_width / 2 + spacing / 2), staff_data['sock_to_shoe_ratio'], width=bar_width, label='Sock-to-Shoe Ratio', color='skyblue', edgecolor='black')
-    bars_insole = ax.bar(staff_data['week'] + (bar_width / 2 + spacing / 2), staff_data['insole_to_shoe_ratio'], width=bar_width, label='Insole-to-Shoe Ratio', color='red', edgecolor='black')
+    bars_sock = ax.bar(staff_data['week'] - (bar_width / 2 + spacing / 2), staff_data['sock_to_shoe_ratio'],
+                       width=bar_width, label='Sock-to-Shoe Ratio', color='skyblue', edgecolor='black')
+    bars_insole = ax.bar(staff_data['week'] + (bar_width / 2 + spacing / 2), staff_data['insole_to_shoe_ratio'],
+                         width=bar_width, label='Insole-to-Shoe Ratio', color='red', edgecolor='black')
 
     ax.spines['top'].set_linewidth(1.5)
     ax.spines['right'].set_linewidth(1.5)
@@ -79,11 +85,13 @@ def create_bar_chart(staff_data):
 
     for bar in bars_sock:
         height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width() / 2.0, height, f'{height:.0%}', ha='center', va='bottom', fontsize=10, fontweight='bold')
+        ax.text(bar.get_x() + bar.get_width() / 2.0, height, f'{height:.0%}', ha='center', va='bottom', fontsize=10,
+                fontweight='bold')
 
     for bar in bars_insole:
         height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width() / 2.0, height, f'{height:.0%}', ha='center', va='bottom', fontsize=10, fontweight='bold')
+        ax.text(bar.get_x() + bar.get_width() / 2.0, height, f'{height:.0%}', ha='center', va='bottom', fontsize=10,
+                fontweight='bold')
 
     ax.set_xlabel('Week Number')
     ax.set_ylabel('Ratio')
@@ -112,7 +120,7 @@ def create_bar_chart1(shoes, socks, insoles):
 
     ax.bar(categories, values, color=['blue', 'orange', 'green'])
     ax.set_ylabel('Total Quantities')
-    ax.set_title('Total Quantities for Quarter')
+    ax.set_title('Total Quantities for Quarter', fontweight='bold')
 
     for i, v in enumerate(values):
         ax.text(i, v + 3, str(v), ha='center', va='bottom', fontsize=12)
@@ -121,34 +129,48 @@ def create_bar_chart1(shoes, socks, insoles):
 
 def create_table(staff_data):
     """Create a table for staff data."""
-    table_data = staff_data[['week', 'date_range', 'net_quantity_shoes', 'net_quantity_socks', 'net_quantity_insoles']].copy()
+    table_data = staff_data[
+        ['week', 'date_range', 'net_quantity_shoes', 'net_quantity_socks', 'net_quantity_insoles']].copy()
     table_data.columns = ['Week', 'Date Range', 'Shoes Sold', 'Socks Sold', 'Insoles Sold']
     table_data.set_index('Week', inplace=True)
 
     st.table(table_data)
 
-def create_donut_chart(total, values, labels, title, is_percentage=False):
-    """Create a donut chart."""
+def wrap_labels(labels):
+    wrapped_labels = []
+    for label in labels:
+        if ' ' in label:
+            parts = label.split(' ', 1)
+            wrapped_label = parts[0] + '\n' + parts[1]
+        else:
+            wrapped_label = label
+        wrapped_labels.append(wrapped_label)
+    return wrapped_labels
+
+def create_donut_chart(total, values, labels, title):
     fig, ax = plt.subplots()
 
-    percent_values = values * 100
-    wedges, texts, autotexts = ax.pie(values, labels=labels, autopct=lambda p: f'{p * sum(values) / 100:.1f}%', startangle=90, wedgeprops=dict(width=0.2, edgecolor='w'))
+    # Wrap labels to place "Pacers" on the top line and the rest on the bottom line
+    wrapped_labels = wrap_labels(labels)
 
-    for i, a in enumerate(autotexts):
-        a.set_text(f'{values[i] * 100:.1f}%')
+    # Create pie chart with adjusted distance for percentages
+    wedges, texts, autotexts = ax.pie(values, labels=wrapped_labels, autopct=lambda p: '{:.1f}%'.format(p) if p > 0 else '', startangle=90,
+                                      wedgeprops=dict(width=0.2, edgecolor='w'), pctdistance=0.65)
 
+    # Draw white circle in the center to create donut effect
     center_circle = plt.Circle((0, 0), 0.70, fc='white')
     fig.gca().add_artist(center_circle)
 
-    center_text = f"{total * 100:.2f}%" if is_percentage else str(total)
-    plt.text(0, 0, center_text, ha='center', va='center', fontsize=30, color='black')
+    # Add total number in the center
+    plt.text(0, 0, str(total), ha='center', va='center', fontsize=26, color='black')
 
+    # Equal aspect ratio ensures that pie is drawn as a circle.
     ax.axis('equal')
-    plt.title(title)
+    plt.title(title, fontweight='bold')
     return fig
 
 # Streamlit title
-st.header("CCI Dashboard")
+st.header("Q2 CCI Dashboard")
 
 # File uploader for CSV file
 uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
@@ -193,13 +215,16 @@ if uploaded_file is not None:
 
     store_data_clean_df = add_date_ranges(merged_agg)
 
-    quarter_total = store_data_clean_df.groupby('pos_location_name')[['net_quantity_shoes', 'net_quantity_socks', 'net_quantity_insoles']].sum().reset_index()
+    quarter_total = store_data_clean_df.groupby('pos_location_name')[
+        ['net_quantity_shoes', 'net_quantity_socks', 'net_quantity_insoles']].sum().reset_index()
     quarter_total['sock_to_shoe_ratio'] = quarter_total['net_quantity_socks'] / quarter_total['net_quantity_shoes']
     quarter_total['insole_to_shoe_ratio'] = quarter_total['net_quantity_insoles'] / quarter_total['net_quantity_shoes']
 
     total_quantities = store_data_clean_df[['net_quantity_shoes', 'net_quantity_socks', 'net_quantity_insoles']].sum()
-    total_quantities['sock_to_shoe_ratio'] = total_quantities['net_quantity_socks'] / total_quantities['net_quantity_shoes']
-    total_quantities['insole_to_shoe_ratio'] = total_quantities['net_quantity_insoles'] / total_quantities['net_quantity_shoes']
+    total_quantities['sock_to_shoe_ratio'] = total_quantities['net_quantity_socks'] / total_quantities[
+        'net_quantity_shoes']
+    total_quantities['insole_to_shoe_ratio'] = total_quantities['net_quantity_insoles'] / total_quantities[
+        'net_quantity_shoes']
     total_quantities_df = total_quantities.to_frame().T
 
     total_shoes = quarter_total['net_quantity_shoes'].sum()
@@ -214,11 +239,13 @@ if uploaded_file is not None:
         st.pyplot(fig)
 
     with col2:
-        fig = create_donut_chart(f"{total_sock_ratio:.2%}", quarter_total['sock_to_shoe_ratio'], quarter_total['pos_location_name'], 'Sock to Shoe Ratio for Quarter')
+        fig = create_donut_chart(f"{total_sock_ratio:.2%}", quarter_total['sock_to_shoe_ratio'],
+                                 quarter_total['pos_location_name'], 'Sock to Shoe Ratio for Quarter')
         st.pyplot(fig)
 
     with col3:
-        fig = create_donut_chart(f"{total_insole_ratio:.2%}", quarter_total['insole_to_shoe_ratio'], quarter_total['pos_location_name'], 'Insole to Shoe Ratio for Quarter')
+        fig = create_donut_chart(f"{total_insole_ratio:.2%}", quarter_total['insole_to_shoe_ratio'],
+                                 quarter_total['pos_location_name'], 'Insole to Shoe Ratio for Quarter')
         st.pyplot(fig)
 
     Q2_cci_14_clean_df = store_data_clean_df[store_data_clean_df['pos_location_name'] == 'Pacers 14th St']
