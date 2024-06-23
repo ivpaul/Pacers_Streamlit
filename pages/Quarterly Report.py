@@ -17,20 +17,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-
-def log_access(message):
-    """Log access to the application."""
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open("access_log.txt", "a") as f:
-        f.write(f"{message} at: {current_time}\n")
-
 def clean_data(data):
     """Clean the input data by removing duplicates and handling missing values."""
     data = data.drop_duplicates()
     data = data.dropna(subset=['pos_location_name'])
-
     data = data[data['pos_location_name'].isin(DESIRED_LOCATIONS)]
-
     data['staff_name'] = data['staff_name'].fillna(data['pos_location_name'])
     data['name_of_staff_who_helped_with_sale'] = data['name_of_staff_who_helped_with_sale'].fillna(data['staff_name'])
     data = data.dropna(subset=['product_type', 'variant_title'])
@@ -153,9 +144,14 @@ def create_donut_chart(total, values, labels, title):
     # Wrap labels to place "Pacers" on the top line and the rest on the bottom line
     wrapped_labels = wrap_labels(labels)
 
-    # Create pie chart with adjusted distance for percentages
     wedges, texts, autotexts = ax.pie(values, labels=wrapped_labels, autopct=lambda p: '{:.1f}%'.format(p) if p > 0 else '', startangle=90,
                                       wedgeprops=dict(width=0.2, edgecolor='w'), pctdistance=0.65)
+
+    # Correct the autopct to display correct percentages
+    for i, a in enumerate(autotexts):
+        a.set_text(f'{values[i] * 100:.1f}%')
+
+
 
     # Draw white circle in the center to create donut effect
     center_circle = plt.Circle((0, 0), 0.70, fc='white')
@@ -176,12 +172,8 @@ st.header("Q2 CCI Dashboard")
 uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
 if uploaded_file is not None:
 
-    # Log the file upload event
-    log_access(f"Quarterly report uploaded: {uploaded_file.name}")
-
     data = pd.read_csv(uploaded_file)
 
-    # Call the clean_data function
     cleaned_data = clean_data(data)
 
     cci_sales = cleaned_data[cleaned_data['product_type'].isin(FILTERED_PRODUCT_TYPES)]
