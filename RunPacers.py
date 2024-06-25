@@ -28,8 +28,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Log page configuration setup
-logging.info('Page configuration set')
 
 # URL to be displayed
 url = "https://www.runpacers.com"
