@@ -4,6 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 
+# Add a cache buster
+st.cache.clear()
+
 # Constants
 DESIRED_LOCATIONS = ['Pacers 14th St', 'Pacers Georgetown', 'Pacers Alexandria', 'Pacers Navy Yard', 'Pacers Arlington']
 FILTERED_PRODUCT_TYPES = ["Men's Shoes", "Women's Shoes", "Footbeds", "Socks"]

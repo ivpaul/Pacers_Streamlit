@@ -3,6 +3,9 @@ import logging
 from datetime import datetime
 import os
 
+# Add a cache buster
+st.cache.clear()
+
 # Streamlit app configuration
 st.set_page_config(
     page_title="Inventory",
