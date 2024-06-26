@@ -91,8 +91,6 @@ def process_week_data(data, start_date_column, week_column):
 
     return data
 
-
-
 def calculate_total_quantities(data):
     """Calculate total quantities and ratios."""
     total_quantities = data[['net_quantity_shoes', 'net_quantity_socks', 'net_quantity_insoles']].sum()
