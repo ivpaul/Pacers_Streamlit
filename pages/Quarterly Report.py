@@ -252,13 +252,23 @@ def create_staff_charts(store_dataframes):
             with col2:
                 create_staff_bar_chart(staff_data)
 
+
 def create_table(staff_data):
     """Create a table for staff data."""
+    # Select relevant columns and copy data
     table_data = staff_data[
         ['week', 'date_range', 'net_quantity_shoes', 'net_quantity_socks', 'net_quantity_insoles']].copy()
+
+    # Rename columns
     table_data.columns = ['Week', 'Date Range', 'Shoes Sold', 'Socks Sold', 'Insoles Sold']
+
+    # Sort data by 'Week' in ascending order
+    table_data.sort_values('Week', inplace=True)
+
+    # Set 'Week' as index
     table_data.set_index('Week', inplace=True)
 
+    # Display table
     st.table(table_data)
 def create_staff_bar_chart(staff_data):
     """Create a bar chart for staff data."""
