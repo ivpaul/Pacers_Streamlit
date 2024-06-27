@@ -92,8 +92,11 @@ def calculate_ratios(data):
     data['insole_to_shoe_ratio'] = data['insole_to_shoe_ratio'].fillna(0)
 
     # Multiply by 100 and round to 2 decimal places
-    data['sock_to_shoe_ratio'] = (data['sock_to_shoe_ratio'] * 100).round(2)
-    data['insole_to_shoe_ratio'] = (data['insole_to_shoe_ratio'] * 100).round(2)
+    # data['sock_to_shoe_ratio'] = (data['sock_to_shoe_ratio'] * 100).round(2)
+    # data['insole_to_shoe_ratio'] = (data['insole_to_shoe_ratio'] * 100).round(2)
+
+    data['sock_to_shoe_ratio'] = (data['sock_to_shoe_ratio']).round(2)
+    data['insole_to_shoe_ratio'] = (data['insole_to_shoe_ratio']).round(2)
 
     return data
 
@@ -129,6 +132,15 @@ def calculate_quarter_totals(data):
     quarter_total['insole_to_shoe_ratio'] = quarter_total['net_quantity_insoles'] / quarter_total['net_quantity_shoes']
     return quarter_total
 
+def calculate_weekly_totals(data):
+    """Calculate weekly totals and ratios."""
+    weekly_total = data.groupby(['week', 'pos_location_name'])[['net_quantity_shoes', 'net_quantity_socks', 'net_quantity_insoles']].sum().reset_index()
+    weekly_total['sock_to_shoe_ratio'] = weekly_total['net_quantity_socks'] / weekly_total['net_quantity_shoes']
+    weekly_total['insole_to_shoe_ratio'] = weekly_total['net_quantity_insoles'] / weekly_total['net_quantity_shoes']
+    return weekly_total
+
+
+
 def create_quarter_charts(quarter_total):
     """Create and display quarter charts."""
     total_shoes = quarter_total['net_quantity_shoes'].sum()
@@ -155,6 +167,33 @@ def create_quarter_charts(quarter_total):
     with col3:
         fig = create_donut_chart(f"{total_insole_ratio:.2%}", quarter_total['insole_to_shoe_ratio'],
                                  quarter_total['pos_location_name'], 'Insole to Shoe Ratio for Quarter')
+        st.pyplot(fig)
+
+def create_weekly_charts(weekly_total):
+    """Create and display weekly charts."""
+    total_shoes = weekly_total['net_quantity_shoes'].sum()
+    total_socks = weekly_total['net_quantity_socks'].sum()
+    total_insoles = weekly_total['net_quantity_insoles'].sum()
+    total_sock_ratio = total_socks / total_shoes
+    total_insole_ratio = total_insoles / total_shoes
+
+    stores = weekly_total['pos_location_name'].unique()
+    categories = ['Shoes', 'Socks', 'Insoles']
+    column_mapping = ['net_quantity_shoes', 'net_quantity_socks', 'net_quantity_insoles']
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        fig = create_cci_bar_chart_grouped(weekly_total, categories, stores, column_mapping)
+        st.pyplot(fig)
+
+    with col2:
+        fig = create_donut_chart(f"{total_sock_ratio:.2%}", weekly_total['sock_to_shoe_ratio'],
+                                 weekly_total['pos_location_name'], 'Sock to Shoe Ratio for Week')
+        st.pyplot(fig)
+
+    with col3:
+        fig = create_donut_chart(f"{total_insole_ratio:.2%}", weekly_total['insole_to_shoe_ratio'],
+                                 weekly_total['pos_location_name'], 'Insole to Shoe Ratio for Week')
         st.pyplot(fig)
 
 def create_cci_bar_chart_grouped(data, categories, stores, column_mapping):
@@ -378,19 +417,19 @@ if uploaded_file is not None:
         agg_data4 = fill_and_convert(agg_data3)
 
         # Calculate CCI ratios
-        final_data_df = calculate_ratios(agg_data4)
+        agg_ratio_df = calculate_ratios(agg_data4)
 
+        # Process the 'week' column and add date ranges
+        store_data_clean_df = process_week_data(agg_ratio_df, 'week')
 
         # Calculate quarter data
         st.header("Quarter Data")
-        quarter_total = calculate_quarter_totals(final_data_df)
-        total_quantities_df = calculate_total_quantities(final_data_df)
+
+        quarter_total = calculate_quarter_totals(store_data_clean_df)
+        total_quantities_df = calculate_total_quantities(store_data_clean_df)
 
         # Display quarter charts
         create_quarter_charts(quarter_total)
-
-        # Process the 'week' column and add date ranges
-        store_data_clean_df = process_week_data(final_data_df, 'week')
 
         # Weekly data section
         st.header("Weekly Data")
@@ -412,11 +451,9 @@ if uploaded_file is not None:
         selected_week = st.selectbox("Select a Week", week_range)
 
         # Filter the DataFrame for the selected week
-        specific_week_totals = weekly_totals_by_location[weekly_totals_by_location['date_range'] == selected_week]
+        specific_week_totals = weekly_totals_by_location[weekly_totals_by_location['date_range'] == selected_week].drop(columns=['week', 'date_range']).reset_index(drop=True)
 
-        # Display the filtered DataFrame
-        st.write(specific_week_totals)
-
+        create_weekly_charts(specific_week_totals)
 
         # Display Staff Data
         st.header("Staff Trend Data")
