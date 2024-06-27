@@ -76,18 +76,37 @@ def fill_and_convert(data):
 
 def calculate_ratios(data):
     """Calculate CCI ratios."""
+    # Calculate the ratios
     data['sock_to_shoe_ratio'] = data['net_quantity_socks'] / data['net_quantity_shoes']
     data['insole_to_shoe_ratio'] = data['net_quantity_insoles'] / data['net_quantity_shoes']
+
+    # Replace null and infinite values after the ratio calculation
+    data['sock_to_shoe_ratio'] = data['sock_to_shoe_ratio'].replace([float('inf'), -float('inf')], None)
+    data['insole_to_shoe_ratio'] = data['insole_to_shoe_ratio'].replace([float('inf'), -float('inf')], None)
+
+    # Ensure the columns are of numeric type before filling NA values
+    data['sock_to_shoe_ratio'] = pd.to_numeric(data['sock_to_shoe_ratio'], errors='coerce')
+    data['insole_to_shoe_ratio'] = pd.to_numeric(data['insole_to_shoe_ratio'], errors='coerce')
+
+    data['sock_to_shoe_ratio'] = data['sock_to_shoe_ratio'].fillna(0)
+    data['insole_to_shoe_ratio'] = data['insole_to_shoe_ratio'].fillna(0)
+
+    # Multiply by 100 and round to 2 decimal places
+    data['sock_to_shoe_ratio'] = (data['sock_to_shoe_ratio'] * 100).round(2)
+    data['insole_to_shoe_ratio'] = (data['insole_to_shoe_ratio'] * 100).round(2)
+
     return data
 
-def process_week_data(data, start_date_column, week_column):
+def process_week_data(data, week_column):
     """Convert week dates to week numbers and add date ranges."""
     # Convert week dates to week numbers
     data[week_column] = ((data[week_column] - START_DATE) / pd.Timedelta(weeks=1)).astype(int) + 1
 
     # Add date ranges
-    data['date_range'] = data[week_column].apply(lambda
-                                                     x: f"{(START_DATE + pd.Timedelta(days=(x - 1) * 7)).strftime('%Y-%m-%d')} to {(START_DATE + pd.Timedelta(days=x * 7 - 1)).strftime('%Y-%m-%d')}")
+    data['date_range'] = data[week_column].apply(
+        lambda
+            x: f"{(START_DATE + pd.Timedelta(days=(x - 1) * 7)).strftime('%b %d')} - {(START_DATE + pd.Timedelta(days=x * 7 - 1)).strftime('%b %d')}"
+    )
 
     return data
 
@@ -115,7 +134,8 @@ def create_quarter_charts(quarter_total):
     total_shoes = quarter_total['net_quantity_shoes'].sum()
     total_socks = quarter_total['net_quantity_socks'].sum()
     total_insoles = quarter_total['net_quantity_insoles'].sum()
-    total_sock_ratio = quarter_total['sock_to_shoe_ratio'].mean()
+    # total_sock_ratio = quarter_total['sock_to_shoe_ratio'].mean()
+    total_sock_ratio = total_socks/total_shoes
     total_insole_ratio = quarter_total['insole_to_shoe_ratio'].mean()
 
     stores = quarter_total['pos_location_name'].unique()
@@ -136,6 +156,7 @@ def create_quarter_charts(quarter_total):
         fig = create_donut_chart(f"{total_insole_ratio:.2%}", quarter_total['insole_to_shoe_ratio'],
                                  quarter_total['pos_location_name'], 'Insole to Shoe Ratio for Quarter')
         st.pyplot(fig)
+
 def create_cci_bar_chart_grouped(data, categories, stores, column_mapping):
     """Create a grouped bar chart for total quantities per store."""
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -209,7 +230,7 @@ def create_donut_chart(total, values, labels, title):
     return fig
 
 #####
-#individual staff data
+#Individual staff data
 #####
 
 def prepare_store_dataframes(data):
@@ -252,7 +273,6 @@ def create_staff_charts(store_dataframes):
             with col2:
                 create_staff_bar_chart(staff_data)
 
-
 def create_table(staff_data):
     """Create a table for staff data."""
     # Select relevant columns and copy data
@@ -270,6 +290,7 @@ def create_table(staff_data):
 
     # Display table
     st.table(table_data)
+
 def create_staff_bar_chart(staff_data):
     """Create a bar chart for staff data."""
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -316,68 +337,93 @@ def create_staff_bar_chart(staff_data):
 
     st.pyplot(fig)
 
-
-
 # Streamlit title
 st.header("Q2 CCI Dashboard")
 
 # File uploader for CSV file
-uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+uploaded_file = st.file_uploader("Upload Shopify Report", type=["csv"])
+
 if uploaded_file is not None:
+    try:
 
-    # Upload data file
-    data = pd.read_csv(uploaded_file)
+        # Upload data file
+        data = pd.read_csv(uploaded_file)
 
-    # Clean data
-    cleaned_data = clean_data(data)
+        # Clean data
+        cleaned_data = clean_data(data)
 
-    # Filter data by products of interest
-    cci_sales = cleaned_data[cleaned_data['product_type'].isin(FILTERED_PRODUCT_TYPES)]
+        # Filter data by products of interest
+        cci_sales = cleaned_data[cleaned_data['product_type'].isin(FILTERED_PRODUCT_TYPES)]
 
-    # Add a column 'week' to dataframe
-    cci_sales = add_week_column(cci_sales, 'day', 'week')
+        # Add a column 'week' to dataframe
+        cci_sales = add_week_column(cci_sales, 'day', 'week')
 
-    # Filter data into specific dataframes by product
-    shoes_df = filter_data_by_product_type(cci_sales, ["Men's Shoes", "Women's Shoes"])
-    socks_df = filter_data_by_product_type(cci_sales, ["Socks"])
-    insoles_df = filter_data_by_product_type(cci_sales, ["Footbeds"])
+        # Filter data into specific dataframes by product
+        shoes_df = filter_data_by_product_type(cci_sales, ["Men's Shoes", "Women's Shoes"])
+        socks_df = filter_data_by_product_type(cci_sales, ["Socks"])
+        insoles_df = filter_data_by_product_type(cci_sales, ["Footbeds"])
 
-    group_columns = ['week', 'pos_location_name', 'name_of_staff_who_helped_with_sale']
+        group_columns = ['week', 'pos_location_name', 'name_of_staff_who_helped_with_sale']
 
-    # Aggregate data
-    agg_data = aggregate_data_by_columns(cci_sales, group_columns, 'net_quantity')
+        # Aggregate data
+        agg_data1 = aggregate_data_by_columns(cci_sales, group_columns, 'net_quantity')
 
-    # Rename columns
-    agg_data = rename_columns(agg_data)
+        # Rename columns
+        agg_data2 = rename_columns(agg_data1)
 
-    # Combine men's and women's shoes
-    agg_data = combine_shoe_columns(agg_data)
+        # Combine men's and women's shoes
+        agg_data3 = combine_shoe_columns(agg_data2)
 
-    # Fill NaN values and convert data types
-    agg_data = fill_and_convert(agg_data)
+        # Fill NaN values and convert data types
+        agg_data4 = fill_and_convert(agg_data3)
 
-    # Calculate CCI ratios
-    agg_data = calculate_ratios(agg_data)
+        # Calculate CCI ratios
+        final_data_df = calculate_ratios(agg_data4)
 
-    # Process the 'week' column and store in new df
-    store_data_clean_df = process_week_data(agg_data, 'start_date_column', 'week')
 
-    # Calculate quarter data
-    st.header("Quarter Data")
-    quarter_total = calculate_quarter_totals(store_data_clean_df)
-    total_quantities_df = calculate_total_quantities(agg_data)
+        # Calculate quarter data
+        st.header("Quarter Data")
+        quarter_total = calculate_quarter_totals(final_data_df)
+        total_quantities_df = calculate_total_quantities(final_data_df)
 
-    # Display quarter charts
-    create_quarter_charts(quarter_total)
+        # Display quarter charts
+        create_quarter_charts(quarter_total)
 
-    # Weekly data section
-    # st.title("Weekly Data")
+        # Process the 'week' column and add date ranges
+        store_data_clean_df = process_week_data(final_data_df, 'week')
 
-    #Display Staff Data
-    st.header("Staff Data")
-    # Prepare store dataframes and display store level and individual staff charts
-    store_dataframes = prepare_store_dataframes(agg_data)
-    create_staff_charts(store_dataframes)
+        # Weekly data section
+        st.header("Weekly Data")
 
-else:
-    st.info("Please upload a CSV file to proceed.")
+        # Group by week and pos_location_name and sum the net_quantity columns
+        weekly_totals_by_location = store_data_clean_df.groupby(['week', 'date_range', 'pos_location_name'])[
+            ['net_quantity_shoes', 'net_quantity_socks', 'net_quantity_insoles']
+        ].sum().reset_index()
+
+        # Calculate ratios
+        weekly_totals_by_location = calculate_ratios(weekly_totals_by_location)
+
+        # Sort the date ranges inline without adding a new column or function
+        week_range = sorted(weekly_totals_by_location['date_range'].unique(),
+                            key=lambda x: (pd.to_datetime(x.split(' - ')[0], format='%b %d')),
+                            reverse=True)
+
+        # Week selection
+        selected_week = st.selectbox("Select a Week", week_range)
+
+        # Filter the DataFrame for the selected week
+        specific_week_totals = weekly_totals_by_location[weekly_totals_by_location['date_range'] == selected_week]
+
+        # Display the filtered DataFrame
+        st.write(specific_week_totals)
+
+
+        # Display Staff Data
+        st.header("Staff Trend Data")
+
+        # Prepare store dataframes and display store level and individual staff charts
+        store_dataframes = prepare_store_dataframes(store_data_clean_df)
+        create_staff_charts(store_dataframes)
+
+    except Exception as e:
+        st.error(f"Error reading the file. Please ensure you are using the correctly formatted Shopify Report. Contact Ivan for assistance.")
