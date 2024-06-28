@@ -121,10 +121,6 @@ def calculate_total_quantities(data):
     total_quantities_df = total_quantities.to_frame().T
     return total_quantities_df
 
-#####
-# Quarter Data
-#####
-
 def calculate_quarter_totals(data):
     """Calculate quarter totals and ratios."""
     quarter_total = data.groupby('pos_location_name')[['net_quantity_shoes', 'net_quantity_socks', 'net_quantity_insoles']].sum().reset_index()
@@ -138,8 +134,6 @@ def calculate_weekly_totals(data):
     weekly_total['sock_to_shoe_ratio'] = weekly_total['net_quantity_socks'] / weekly_total['net_quantity_shoes']
     weekly_total['insole_to_shoe_ratio'] = weekly_total['net_quantity_insoles'] / weekly_total['net_quantity_shoes']
     return weekly_total
-
-
 
 def create_quarter_charts(quarter_total):
     """Create and display quarter charts."""
@@ -156,7 +150,7 @@ def create_quarter_charts(quarter_total):
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        fig = create_cci_bar_chart_grouped(quarter_total, categories, stores, column_mapping)
+        fig = create_cci_bar_chart_grouped(quarter_total, categories, stores, column_mapping, 'Quarter')
         st.pyplot(fig)
 
     with col2:
@@ -183,7 +177,7 @@ def create_weekly_charts(weekly_total):
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        fig = create_cci_bar_chart_grouped(weekly_total, categories, stores, column_mapping)
+        fig = create_cci_bar_chart_grouped(weekly_total, categories, stores, column_mapping, 'Week')
         st.pyplot(fig)
 
     with col2:
@@ -196,7 +190,7 @@ def create_weekly_charts(weekly_total):
                                  weekly_total['pos_location_name'], 'Insole to Shoe Ratio for Week')
         st.pyplot(fig)
 
-def create_cci_bar_chart_grouped(data, categories, stores, column_mapping):
+def create_cci_bar_chart_grouped(data, categories, stores, column_mapping, period):
     """Create a grouped bar chart for total quantities per store."""
     fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -219,7 +213,7 @@ def create_cci_bar_chart_grouped(data, categories, stores, column_mapping):
         ax.bar([pos + idx * bar_width for pos in range(n_categories)], values, bar_width, label=store, edgecolor='black')
 
     ax.set_ylabel('Total Quantities')
-    ax.set_title('Total Quantities for Quarter by Store', fontweight='bold')
+    ax.set_title(f'Total Quantities for {period} by Store', fontweight='bold')
     ax.set_xticks([r + bar_width * (n_stores - 1) / 2 for r in range(n_categories)])
     ax.set_xticklabels(categories)
     ax.legend()
@@ -267,10 +261,6 @@ def create_donut_chart(total, values, labels, title):
     ax.axis('equal')
     plt.title(title, fontweight='bold')
     return fig
-
-#####
-#Individual staff data
-#####
 
 def prepare_store_dataframes(data):
     """Prepare dataframes for each store and sort by staff names."""
@@ -422,16 +412,14 @@ if uploaded_file is not None:
         # Process the 'week' column and add date ranges
         store_data_clean_df = process_week_data(agg_ratio_df, 'week')
 
-        # Calculate quarter data
         st.header("Quarter Data")
 
         quarter_total = calculate_quarter_totals(store_data_clean_df)
-        total_quantities_df = calculate_total_quantities(store_data_clean_df)
+        # total_quantities_df = calculate_total_quantities(store_data_clean_df)
 
         # Display quarter charts
         create_quarter_charts(quarter_total)
 
-        # Weekly data section
         st.header("Weekly Data")
 
         # Group by week and pos_location_name and sum the net_quantity columns
@@ -455,7 +443,6 @@ if uploaded_file is not None:
 
         create_weekly_charts(specific_week_totals)
 
-        # Display Staff Data
         st.header("Staff Trend Data")
 
         # Prepare store dataframes and display store level and individual staff charts
