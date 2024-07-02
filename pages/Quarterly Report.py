@@ -28,7 +28,7 @@ def clean_data(data):
     # Standardize the capitalization of staff names
     data['name_of_staff_who_helped_with_sale'] = data['name_of_staff_who_helped_with_sale'].str.title()
 
-    data = data.dropna(subset=['product_type', 'variant_title'])
+    data = data.dropna(subset=['product_type'])
 
     return data
 
